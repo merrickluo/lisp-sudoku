@@ -3,6 +3,7 @@
 (defparameter sudoku (make-array '(9 9) :initial-element 0))
 (defparameter blocks (make-array '(9 9) :initial-element 0))
 (defparameter colums (make-array '(9 9) :initial-element 0))
+(defparameter memos (make-array '(9 9) :initial-element 0))
 
 (defun convert-x (i j)
   (+ (* (floor (/ i 3)) 3) (floor (/ j 3))))
@@ -20,7 +21,8 @@
 (defun update-table (number i j)
   (setf (aref sudoku i j) number)
   (setf (aref colums j i) number)
-  (setf (aref blocks (convert-x i j) (convert-y i j)) number))
+  (setf (aref blocks (convert-x i j) (convert-y i j)) number)
+  (setf (aref memos i j) nil))
 
 (defun solve-sudoku ()
   (loop for i from 0 to 8 do
@@ -31,7 +33,8 @@
                     (col (make-array 9 :displaced-to colums
                                      :displaced-index-offset (* 9 j)))
                     (blk (make-array 9 :displaced-to blocks
-                                     :displaced-index-offset (* 9 (convert-x i j)))))
+                                     :displaced-index-offset (* 9 (convert-x i j))))
+                    (memo nil))
                 (loop for k from 1 to 9 do
                      (when
                          (not (or (find k row)
@@ -42,9 +45,18 @@
                             (not (and (find 0 row)
                                       (find 0 col)
                                       (find 0 blk))))
-                           (return)
-                           (update-table 0 i j)))))))))
-
+                           nil
+                           (progn
+                             (update-table 0 i j)
+                             (setf memo (cons k memo))))))
+                (setf (aref memos i j) memo)))))
+  (loop for i from 0 to 8 do
+       (loop for j from 0 to 8 do
+            (let ((memo (aref memos i j)))
+              (if (car memo)
+                  (if (cdr memo)
+                      nil
+                      (update-table (car memo) i j)))))))
 		       
 (defun sudoku-solved ()
   (let ((flag t))
@@ -67,7 +79,7 @@
   (sudoku-from-file)
   (get-sudoku))
 
-(defun sudoku-from-file (&optional (filename "~/lisp/sudoku.data"))
+(defun sudoku-from-file (&optional (filename "~/lisp/lisp-sudoku/sudoku.data"))
   (with-open-file (filestream filename)
     (let ((i 0)
           (j 0))
@@ -77,6 +89,7 @@
              (setf (aref sudoku i j) num)
              (setf (aref blocks (convert-x i j) (convert-y i j)) num )
              (setf (aref colums j i) num)
+             (setf (aref memos i j) nil)
              (incf j)
              (when (> j 8)
                  (setf j 0)
