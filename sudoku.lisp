@@ -85,7 +85,8 @@
   "enter function"
   ;;(get-numbers)
   (sudoku-from-file)
-  (get-sudoku))
+  (get-sudoku)
+  sudoku)
 
 (defun sudoku-from-file (&optional (filename "~/lisp/lisp-sudoku/sudoku.data"))
   "read sudoku init data file"
