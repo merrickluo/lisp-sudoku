@@ -33,15 +33,16 @@
   (loop for i from 0 to 8 do
        (loop for j from 0 to 8 do
             (when (eq (aref sudoku i j) 0)
-              (let ((row (make-array 9 :displaced-to sudoku
-                                     :displaced-index-offset (* 9 i)))
-                    (col (make-array 9 :displaced-to colums
-                                     :displaced-index-offset (* 9 j)))
-                    (blk (make-array 9 :displaced-to blocks
-                                     :displaced-index-offset (* 9 (convert-x i j))))
-                    (memo nil))
+              (let* ((row (make-array 9 :displaced-to sudoku
+				      :displaced-index-offset (* 9 i)))
+		     (col (make-array 9 :displaced-to colums
+				      :displaced-index-offset (* 9 j)))
+		     (blk (make-array 9 :displaced-to blocks
+				      :displaced-index-offset (* 9 (convert-x i j))))
+		     (memo nil)
+		     (other (merge 'vector (merge 'vector row col #'<) blk #'<)))
                 (loop for k from 1 to 9 do
-                     (when
+		     (when
                          (not (or (find k row)
                                   (find k col)
                                   (find k blk)))
@@ -49,7 +50,8 @@
                        (if (or
                             (not (and (find 0 row)
                                       (find 0 col)
-                                      (find 0 blk))))
+                                      (find 0 blk)))
+			    (eq (length other) 8))
                            nil
                            (progn
                              (update-table 0 i j)
@@ -88,7 +90,7 @@
   (get-sudoku)
   sudoku)
 
-(defun sudoku-from-file (&optional (filename "~/lisp/lisp-sudoku/sudoku.data"))
+(defun sudoku-from-file (&optional (filename "~/lisp/sudoku/sudoku.data"))
   "read sudoku init data file"
   (with-open-file (filestream filename)
     (let ((i 0)
@@ -105,3 +107,6 @@
                  (setf j 0)
                  (incf i)))))))
          
+(defun merge-lists (list-a list-b list-c sort-fn test-fn)
+  "merge two list together"
+  (sort (remove-duplicates (append list-a list-b list-c ) :test test-fn) sort-fn))
