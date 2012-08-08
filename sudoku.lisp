@@ -1,4 +1,4 @@
-;; lym created
+;; lym create to solve sudoku
 
 (defparameter sudoku (make-array '(9 9) :initial-element 0))
 (defparameter blocks (make-array '(9 9) :initial-element 0))
@@ -6,12 +6,15 @@
 (defparameter memos (make-array '(9 9) :initial-element 0))
 
 (defun convert-x (i j)
+  "convert normal sudoku x to block x"
   (+ (* (floor (/ i 3)) 3) (floor (/ j 3))))
 
 (defun convert-y (i j)
+  "convert normal sudoku y to block y"
   (+ (* (mod i 3) 3) (mod j 3)))
 
 (defun get-numbers()
+  "get sudoku numbers from std input not recommend"
   (loop for i from 0 to 8 do
        (loop for j from 0 to 8 do
 	    (setf (aref sudoku i j) (read))
@@ -19,12 +22,14 @@
 	    (setf (aref colums j i) (aref sudoku i j)))))
 
 (defun update-table (number i j)
+  "must update all the tables when you change a number"
   (setf (aref sudoku i j) number)
   (setf (aref colums j i) number)
   (setf (aref blocks (convert-x i j) (convert-y i j)) number)
   (setf (aref memos i j) nil))
 
 (defun solve-sudoku ()
+  "main function to solve the sudoku"
   (loop for i from 0 to 8 do
        (loop for j from 0 to 8 do
             (when (eq (aref sudoku i j) 0)
@@ -59,6 +64,7 @@
                       (update-table (car memo) i j)))))))
 		       
 (defun sudoku-solved ()
+  "see if sudoku is solved"
   (let ((flag t))
     (loop for i from 0 to 8 do
 	 (loop for j from 0 to 8 do
@@ -70,16 +76,19 @@
   
 
 (defun get-sudoku ()
+  "try to solve sudoku until it is solved"
   (when (not (sudoku-solved))
       (solve-sudoku)
       (get-sudoku)))
 
 (defun sudoku-cheat ()
+  "enter function"
   ;;(get-numbers)
   (sudoku-from-file)
   (get-sudoku))
 
 (defun sudoku-from-file (&optional (filename "~/lisp/lisp-sudoku/sudoku.data"))
+  "read sudoku init data file"
   (with-open-file (filestream filename)
     (let ((i 0)
           (j 0))
