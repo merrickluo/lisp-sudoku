@@ -1,4 +1,4 @@
-;; lym
+;; lym created
 
 (defparameter sudoku (make-array '(9 9) :initial-element 0))
 (defparameter blocks (make-array '(9 9) :initial-element 0))
