@@ -40,7 +40,7 @@
 		     (blk (make-array 9 :displaced-to blocks
 				      :displaced-index-offset (* 9 (convert-x i j))))
 		     (memo nil)
-		     (other (remove-duplicates
+                     (other (remove-duplicates
                              (merge 'list (merge 'vector row col #'<) blk #'<) :test #'eq)))
                 (loop for k from 1 to 9 do
 		     (when
@@ -55,7 +55,6 @@
 			    (eq (length other) 9))
                            nil
                            (progn
-                             (print other)
                              (update-table 0 i j)
                              (setf memo (cons k memo))))))
                 (setf (aref memos i j) memo)))))
