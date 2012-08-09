@@ -41,19 +41,36 @@
 				      :displaced-index-offset (* 9 (convert-x i j))))
 		     (memo nil)
                      (other (remove-duplicates
-                             (merge 'list (merge 'vector row col #'<) blk #'<) :test #'eq)))
-                (loop for k from 1 to 9 do
+                             (merge 'list (merge 'vector row col #'<) blk #'<) :test #'eq))
+                     (row-up (coerce (make-array 9 :displaced-to sudoku
+                                                 :displaced-index-offset (* 9 (s- i)))
+                                     'list))
+		     (row-down (coerce (make-array 9 :displaced-to sudoku
+                                                   :displaced-index-offset (* 9 (s+ i)))
+                                       'list))
+		     (col-left (coerce (make-array 9 :displaced-to colums
+                                                   :displaced-index-offset (* 9 (s- j)))
+                                       'list))
+		     (col-right (coerce (make-array 9 :displaced-to colums
+                                                    :displaced-index-offset (* 9 (s+ j)))
+                                        'list))
+                     (other-list (intersection (intersection row-up row-down :test #'eq)
+                                               (intersection col-left col-right :test #'eq)
+                                               :test #'eq)))
+                (loop for k from 1 to 9
+                   while (eq (aref sudoku i j) 0) do
 		     (when
-                         (not (or (find k row)
-                                  (find k col)
-                                  (find k blk)))
+                          (not (or (find k row)
+                                   (find k col)
+                                   (find k blk)))
                        (update-table k i j)
                        (if (or
+                            (find k other-list)
                             (not (and (find 0 row)
                                       (find 0 col)
                                       (find 0 blk)))
 			    (eq (length other) 9))
-                           nil
+                           (format t "i:~a j:~a k:~a~%" i j k)
                            (progn
                              (update-table 0 i j)
                              (setf memo (cons k memo))))))
@@ -111,3 +128,13 @@
 (defun merge-lists (list-a list-b list-c sort-fn test-fn)
   "merge two list together"
   (sort (remove-duplicates (append list-a list-b list-c ) :test test-fn) sort-fn))
+
+(defun s- (x)
+  (if (eq (mod x 3) 0)
+      (+ x 2)
+      (- x 1)))
+
+(defun s+ (x)
+  (if (eq (mod x 3) 2)
+      (- x 2)
+      (+ x 1)))
