@@ -14,7 +14,7 @@
                         (setf elt (make-list 9 :initial-element nil)))
                       (make-list 9 :initial-element nil))))
 
-(defun solve-*sudoku* ()
+(defun solve-sudoku ()
   "main function to solve the *sudoku*"
   (loop for i from 0 to 8 do
        (loop for j from 0 to 8 do
@@ -59,7 +59,7 @@
                       nil
                       (update-table (car memo) i j)))))))
 		       
-(defun *sudoku*-solved ()
+(defun sudoku-solved ()
   "see if *sudoku* is solved"
   (let ((flag t))
     (loop for i from 0 to 8 do
@@ -67,19 +67,19 @@
              (setf flag nil)))
     flag))
 
-(defun get-*sudoku* ()
+(defun get-sudoku ()
   "try to solve *sudoku* until it is solved"
-  (when (not (*sudoku*-solved))
-      (solve-*sudoku*)
-      (get-*sudoku*)))
+  (when (not (sudoku-solved))
+      (solve-sudoku)
+      (get-sudoku)))
 
-(defun *sudoku*-cheat ()
+(defun sudoku-cheat ()
   "enter function"
-  (*sudoku*-from-file)
-  (get-*sudoku*)
+  (sudoku-from-file)
+  (get-sudoku)
   *sudoku*)
 
-(defun *sudoku*-from-file (&optional (filename "~/workspace/lisp/*sudoku*/*sudoku*.data"))
+(defun sudoku-from-file (&optional (filename "~/workspace/lisp/*sudoku*/*sudoku*.data"))
   "read *sudoku* init data file"
   (init-data)
   (with-open-file (filestream filename)
