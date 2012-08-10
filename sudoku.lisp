@@ -1,4 +1,4 @@
-;; lym create to solve *sudoku*
+;; lym create to solve sudoku
 
 (defparameter *sudoku* nil)
 (defparameter *colums* nil)
@@ -15,7 +15,7 @@
                       (make-list 9 :initial-element nil))))
 
 (defun solve-sudoku ()
-  "main function to solve the *sudoku*"
+  "main function to solve the sudoku"
   (loop for i from 0 to 8 do
        (loop for j from 0 to 8 do
             (when (eq (laref *sudoku* i j) 0)
@@ -60,7 +60,7 @@
                       (update-table (car memo) i j)))))))
 		       
 (defun sudoku-solved ()
-  "see if *sudoku* is solved"
+  "see if sudoku is solved"
   (let ((flag t))
     (loop for i from 0 to 8 do
          (if (find 0 (nth i *sudoku*))
@@ -68,7 +68,7 @@
     flag))
 
 (defun get-sudoku ()
-  "try to solve *sudoku* until it is solved"
+  "try to solve sudoku until it is solved"
   (when (not (sudoku-solved))
       (solve-sudoku)
       (get-sudoku)))
@@ -80,7 +80,7 @@
   *sudoku*)
 
 (defun sudoku-from-file (&optional (filename "~/workspace/lisp/*sudoku*/*sudoku*.data"))
-  "read *sudoku* init data file"
+  "read sudoku init data file"
   (init-data)
   (with-open-file (filestream filename)
     (loop for i from 0 to 8 do
@@ -99,20 +99,23 @@
   (sort (remove-duplicates (append list-a list-b list-c ) :test test-fn) sort-fn))
 
 (defun s- (x)
+  "find x's colum left or row up but in one box"
   (if (eq (mod x 3) 0)
       (+ x 2)
       (- x 1)))
 
 (defun s+ (x)
+  "find x's colum right or row down in one box"
   (if (eq (mod x 3) 2)
       (- x 2)
       (+ x 1)))
+
 (defun convert-x (i j)
-  "convert normal *sudoku* x to block x"
+  "convert normal sudoku x to block x"
   (+ (* (floor (/ i 3)) 3) (floor (/ j 3))))
 
 (defun convert-y (i j)
-  "convert normal *sudoku* y to block y"
+  "convert normal sudoku y to block y"
   (+ (* (mod i 3) 3) (mod j 3)))
 
 (defun update-table (number i j)
@@ -123,4 +126,5 @@
   (setf (laref *memos* i j) nil))
 
 (defmacro laref (list x y)
+  "find the row col in a 2-dimension list"
   `(nth ,y (nth ,x ,list)))
