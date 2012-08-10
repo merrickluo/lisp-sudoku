@@ -1,9 +1,9 @@
 ;; lym create to solve sudoku
 
-(defparameter sudoku (make-array '(9 9) :initial-element 0))
-(defparameter blocks (make-array '(9 9) :initial-element 0))
-(defparameter colums (make-array '(9 9) :initial-element 0))
-(defparameter memos (make-array '(9 9) :initial-element 0))
+(defparameter sudoku (make-list 9 :initial-element nil))
+(defparameter blocks (make-list 9 :initial-element nil))
+(defparameter colums (make-list 9 :initial-element nil))
+(defparameter memos (make-list 9 :initial-element nil))
 
 (defun convert-x (i j)
   "convert normal sudoku x to block x"
@@ -17,48 +17,43 @@
   "get sudoku numbers from std input not recommend"
   (loop for i from 0 to 8 do
        (loop for j from 0 to 8 do
-	    (setf (aref sudoku i j) (read))
-	    (setf (aref blocks (convert-x i j) (convert-y i j)) (aref sudoku i j))
-	    (setf (aref colums j i) (aref sudoku i j)))))
+	    (push (nth i sudoku) (read))
+	    (push (nth (convert-x i j) blocks) (car (nth i sudoku)))
+	    (push (nth j colums) (car (nth i sudoku))))))
 
 (defun update-table (number i j)
   "must update all the tables when you change a number"
-  (setf (aref sudoku i j) number)
-  (setf (aref colums j i) number)
-  (setf (aref blocks (convert-x i j) (convert-y i j)) number)
-  (setf (aref memos i j) nil))
+  (setf (laref sudoku i j) number)
+  (setf (laref colums j i) number)
+  (setf (laref blocks (convert-x i j) (convert-y i j)) number)
+  (setf (laref memos i j) nil))
+
+(defmacro laref (list x y)
+  `(nth ,y (nth ,x ,list)))
 
 (defun solve-sudoku ()
   "main function to solve the sudoku"
   (loop for i from 0 to 8 do
        (loop for j from 0 to 8 do
-            (when (eq (aref sudoku i j) 0)
-              (let* ((row (make-array 9 :displaced-to sudoku
-				      :displaced-index-offset (* 9 i)))
-		     (col (make-array 9 :displaced-to colums
-				      :displaced-index-offset (* 9 j)))
-		     (blk (make-array 9 :displaced-to blocks
-				      :displaced-index-offset (* 9 (convert-x i j))))
+            (when (eq (laref sudoku i j) 0)
+              (let* ((row (nth i sudoku))
+		     (col (nth j colums))
+		     (blk (nth (convert-x i j) blocks))
 		     (memo nil)
-                     (other (remove-duplicates
-                             (merge 'list (merge 'vector row col #'<) blk #'<) :test #'eq))
-                     (row-up (coerce (make-array 9 :displaced-to sudoku
-                                                 :displaced-index-offset (* 9 (s- i)))
-                                     'list))
-		     (row-down (coerce (make-array 9 :displaced-to sudoku
-                                                   :displaced-index-offset (* 9 (s+ i)))
-                                       'list))
-		     (col-left (coerce (make-array 9 :displaced-to colums
-                                                   :displaced-index-offset (* 9 (s- j)))
-                                       'list))
-		     (col-right (coerce (make-array 9 :displaced-to colums
-                                                    :displaced-index-offset (* 9 (s+ j)))
-                                        'list))
+                     (other (merge-lists row col blk #'< #'eq))
+                     (row-up (nth (s- i) sudoku))
+		     (row-down (nth (s+ i) sudoku))
+		     (col-left (nth (s- j) colums))
+		     (col-right (nth (s+ j) colums))
                      (other-list (intersection (intersection row-up row-down :test #'eq)
                                                (intersection col-left col-right :test #'eq)
                                                :test #'eq)))
+                (print row)
+                (print col)
+                (print blk)
+                (print other)
                 (loop for k from 1 to 9
-                   while (eq (aref sudoku i j) 0) do
+                   while (eq (laref sudoku i j) 0) do
 		     (when
                           (not (or (find k row)
                                    (find k col)
@@ -74,12 +69,13 @@
                            (progn
                              (update-table 0 i j)
                              (setf memo (cons k memo))))))
-                (setf (aref memos i j) memo)))))
+                (setf memo (laref memos i j))))))
+
   (loop for i from 0 to 8 do
        (loop for j from 0 to 8 do
-            (let ((memo (aref memos i j)))
+            (let ((memo (nth j (nth i memos))))
               (if (car memo)
-                  (if (cdr memo)
+                  (if (cdr memos)
                       nil
                       (update-table (car memo) i j)))))))
 		       
@@ -87,12 +83,10 @@
   "see if sudoku is solved"
   (let ((flag t))
     (loop for i from 0 to 8 do
-	 (loop for j from 0 to 8 do
-	      (if (eq (aref sudoku i j) 0)
-		  (progn
-		    (setf flag nil)
-		    (return nil)))))
+         (if (find 0 (nth i sudoku))
+             (setf flag nil)))
     flag))
+
   
 
 (defun get-sudoku ()
@@ -108,22 +102,33 @@
   (get-sudoku)
   sudoku)
 
-(defun sudoku-from-file (&optional (filename "~/lisp/sudoku/sudoku.data"))
+(defun sudoku-from-file (&optional (filename "~/workspace/lisp/sudoku/sudoku.data"))
   "read sudoku init data file"
+  (setf sudoku (make-list 9 :initial-element nil))
+  (setf blocks (make-list 9 :initial-element nil))
+  (setf colums (make-list 9 :initial-element nil))
+  (setf memos (mapcar (lambda (elt)
+                        (setf elt (make-list 9 :initial-element nil)))
+                      (make-list 9 :initial-element nil)))
+
   (with-open-file (filestream filename)
     (let ((i 0)
-          (j 0))
+          (j 0)
+          (row nil))
       (loop for num =  (read filestream nil 'eof)
          until (eq num 'eof) do
-           (when (not (eq num 'eof))
-             (setf (aref sudoku i j) num)
-             (setf (aref blocks (convert-x i j) (convert-y i j)) num )
-             (setf (aref colums j i) num)
-             (setf (aref memos i j) nil)
-             (incf j)
-             (when (> j 8)
-                 (setf j 0)
-                 (incf i)))))))
+           (push num (nth i sudoku))
+           (push num (nth j colums))
+           (push num (nth (convert-x i j) blocks))
+           (incf j)
+           (when (> j 8)
+             (setf j 0)
+             (setf row nil)
+             (incf i)))))
+  (setf sudoku (mapcar #'reverse sudoku))
+  (setf colums (mapcar #'reverse colums))
+  (setf blocks (mapcar #'reverse blocks)))
+
          
 (defun merge-lists (list-a list-b list-c sort-fn test-fn)
   "merge two list together"
