@@ -79,7 +79,7 @@
   (get-sudoku)
   *sudoku*)
 
-(defun sudoku-from-file (&optional (filename "~/workspace/lisp/*sudoku*/*sudoku*.data"))
+(defun sudoku-from-file (&optional (filename "~/workspace/lisp-sudoku/sudoku.data"))
   "read sudoku init data file"
   (init-data)
   (with-open-file (filestream filename)
